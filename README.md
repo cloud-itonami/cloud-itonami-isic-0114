@@ -12,14 +12,21 @@ its own operational records and maintains full transparency over decisions.
 **Maturity: `:implemented`.** `src/caneops/` implements the
 `CaneOpsAdvisor` (`caneops.advisor`) and the independent `CaneOperations
 Governor` (`caneops.governor`), composed by `caneops.operation` following
-the itonami actor pattern (ADR-2607011000): `advise -> govern -> phase-gate
--> commit | escalate | hold`.
-
-`caneops.operation` is a synchronous stub of this flow (see its
-docstring) — production wiring into a `langgraph-clj` StateGraph with
-`interrupt-before`/checkpoint-based human-in-the-loop resume for escalated
-operations is deferred, mirroring `cloud-itonami-isic-0112`'s own
-`riceops.operation`.
+the itonami actor pattern (ADR-2607011000): `intake -> advise -> govern ->
+decide -> commit | request-approval -> commit | hold`, compiled to a real
+`langgraph-clj` `StateGraph` (`langgraph.graph/state-graph` +
+`compile-graph`, mirroring `cerealops.operation`, cloud-itonami-isic-0111)
+with `interrupt-before #{:request-approval}` and checkpoint-based
+human-in-the-loop resume for escalated operations. Every commit/hold/
+approval-rejected decision fact is appended to `caneops.store`'s
+append-only audit ledger (`ledger`/`append-ledger!`), implemented on both
+`MemStore` and a `DatomicStore` (backed by `langchain.db` via
+`kotoba-lang/langchain-store`) that pass the same store-contract test
+(`test/caneops/store_contract_test.cljc`). 37 tests / 116 assertions
+green (`clojure -M:dev:test`); the demo runner (`clojure -M:dev:run`)
+drives the compiled graph end-to-end through a commit path, an
+escalate→approve→commit path, an escalate→reject→hold path, and a
+hard-hold path, printing the resulting audit ledger.
 
 ## Perennial crop, ratoon-cropping
 
@@ -116,10 +123,10 @@ crop-health concerns or high-cost supply orders) require human sign-off.
 operational request (log, schedule, concern, order)
         |
         v
-CaneOpsAdvisor -> CaneOperationsGovernor -> phase gate -> commit, or escalate for human sign-off
+CaneOpsAdvisor -> CaneOperationsGovernor -> phase gate -> commit, or request-approval for human sign-off
         |
         v
-robot actions (gated) + operating records + audit ledger
+robot actions (gated) + operating records + append-only audit ledger
 ```
 
 No automated operation can dispatch a robot action the governor refuses, suppress an
@@ -128,24 +135,27 @@ evidence.
 
 ## Module structure
 
-Mirrors `cloud-itonami-isic-0112` (`riceops.*`) module-for-module, with the
-paddy-specific water-level check replaced by a perennial-crop-specific
+Mirrors `cloud-itonami-isic-0111` (`cerealops.*`) module-for-module, with the
+cereal-specific acreage-only check extended by a perennial-crop-specific
 ratoon-cycle check:
 
 - `caneops.facts` — reference data: supply-category cost thresholds,
   sugar-cane varieties, field-operation types
 - `caneops.registry` — pure independent verification functions
   (cost/acreage/ratoon-cycle/confidence)
-- `caneops.store` — `Store` protocol + in-memory `MemStore` (cane field
-  registration lookup)
+- `caneops.store` — `Store` protocol: cane-field registration lookup +
+  append-only audit ledger, implemented by `MemStore` (in-memory, default)
+  and `DatomicStore` (`langchain.db`-backed, via `kotoba-lang/langchain-store`)
 - `caneops.advisor` — `Advisor` protocol + `MockAdvisor` (the sealed LLM/
-  decision node)
+  decision node; a real-LLM `Advisor` implementation is the documented next
+  seam, same as every sibling cloud-itonami actor's advisor)
 - `caneops.governor` — `CaneOperationsGovernor`: hard invariants + escalation
   gates
 - `caneops.phase` — 0→3 rollout phase gate
-- `caneops.operation` — composes advisor → governor → phase into one
-  operation run
-- `caneops.sim` — demo runner (`clojure -M:run`)
+- `caneops.operation` — compiles the `langgraph-clj` `StateGraph`: advise →
+  govern → decide → commit | request-approval → commit | hold, with
+  `interrupt-before` + checkpoint-based resume for escalated operations
+- `caneops.sim` — demo runner (`clojure -M:dev:run`)
 
 ## Capability layer
 
@@ -163,10 +173,15 @@ See [`docs/business-model.md`](docs/business-model.md) and
 ## Testing
 
 ```bash
-clojure -M:test   # run the test suite
-clojure -M:lint   # clj-kondo, 0 errors / 0 warnings
-clojure -M:run    # demo runner
+clojure -M:dev:test   # run the test suite (langgraph/langchain-store resolved via local sibling checkouts)
+clojure -M:lint       # clj-kondo, 0 errors / 0 warnings
+clojure -M:dev:run    # demo runner -- drives the compiled StateGraph end-to-end
 ```
+
+`:dev` pins the transitive `langchain` dependency to the in-monorepo local
+checkout (`../../kotoba-lang/langchain`) for offline workspace development;
+a standalone fork should override `deps.edn`'s `:local/root` coordinates
+with git coordinates (see `deps.edn`'s own comment).
 
 ## License
 
