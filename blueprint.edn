@@ -9,4 +9,26 @@
  :itonami.blueprint/required-technologies [:robotics :identity :forms :audit-ledger]
  :itonami.blueprint/optional-technologies [:telemetry :optimization :dmn :bpmn]
  :itonami.blueprint/status :public-oss
- :itonami.blueprint/maturity :implemented}
+ :itonami.blueprint/maturity :implemented
+ :itonami.blueprint/implemented-slice
+ "CaneOpsAdvisor ⊣ Cane Operations Governor, langgraph-clj StateGraph
+ (langgraph.graph, caneops.operation/build), append-only audit ledger
+ (caneops.store/ledger + append-ledger!, MemStore and a DatomicStore
+ backed by langchain.db via langchain-store.core). A back-office
+ OPERATIONS COORDINATION actor for sugar-cane plantation management
+ (perennial crop, ratoon-cropping cycles) -- not direct field-equipment
+ operation authority and not pre-harvest-burn or pesticide-application-
+ decision authority. Four ops (`:log-field-record` /
+ `:schedule-field-operation` / `:flag-crop-health-concern` /
+ `:order-supplies`), all `:effect :propose` only. Six HARD invariants
+ (field-not-registered, no-execution, equipment-or-decision-blocked,
+ op-not-allowed, field-record-invalid, ratoon-cycle-invalid) elaborate
+ this blueprint's Governor. Crop-health-concern flagging ALWAYS
+ escalates to a human grower/agronomist via the compiled graph's
+ `:request-approval` node (`interrupt-before`, checkpoint-based
+ resume); `:log-field-record` and `:schedule-field-operation` are the
+ ops eligible to auto-commit, and only at phase 3 when the Governor is
+ clean. Every commit/hold/approval-rejected decision lands in the
+ append-only ledger -- 37 tests / 116 assertions green
+ (`clojure -M:dev:test`), demo runnable end-to-end against both Store
+ backends (`clojure -M:dev:run`)."}
