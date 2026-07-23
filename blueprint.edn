@@ -1,4 +1,4 @@
-{:itonami.blueprint/id "cloud-itonami-0114"
+{:itonami.blueprint/id "cloud-itonami-isic-0114"
  :itonami.blueprint/name "Sugar-Cane Plantation Operations Coordination"
  :itonami.blueprint/isic-rev5 "0114"
  :itonami.blueprint/domain :agriculture/sugar-cane-growing
