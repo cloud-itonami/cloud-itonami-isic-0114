@@ -23,7 +23,7 @@ append-only audit ledger (`ledger`/`append-ledger!`), implemented on both
 `MemStore` and a `DatomicStore` (backed by `langchain.db` via
 `kotoba-lang/langchain-store`) that pass the same store-contract test
 (`test/caneops/store_contract_test.cljk`). 37 tests / 116 assertions
-green (`clojure -M:dev:test`); the demo runner (`clojure -M:dev:run`)
+green (`kbb -M:dev:test`); the demo runner (`kbb -M:dev:run`)
 drives the compiled graph end-to-end through a commit path, an
 escalate→approve→commit path, an escalate→reject→hold path, and a
 hard-hold path, printing the resulting audit ledger.
@@ -155,7 +155,7 @@ ratoon-cycle check:
 - `caneops.operation` — compiles the `langgraph-clj` `StateGraph`: advise →
   govern → decide → commit | request-approval → commit | hold, with
   `interrupt-before` + checkpoint-based resume for escalated operations
-- `caneops.sim` — demo runner (`clojure -M:dev:run`)
+- `caneops.sim` — demo runner (`kbb -M:dev:run`)
 
 ## Capability layer
 
@@ -173,9 +173,9 @@ See [`docs/business-model.md`](docs/business-model.md) and
 ## Testing
 
 ```bash
-clojure -M:dev:test   # run the test suite (langgraph/langchain-store resolved via local sibling checkouts)
-clojure -M:lint       # clj-kondo, 0 errors / 0 warnings
-clojure -M:dev:run    # demo runner -- drives the compiled StateGraph end-to-end
+kbb -M:dev:test   # run the test suite (langgraph/langchain-store resolved via local sibling checkouts)
+kbb -M:lint       # clj-kondo, 0 errors / 0 warnings
+kbb -M:dev:run    # demo runner -- drives the compiled StateGraph end-to-end
 ```
 
 `:dev` pins the transitive `langchain` dependency to the in-monorepo local

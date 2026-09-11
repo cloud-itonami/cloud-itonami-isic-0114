@@ -30,5 +30,5 @@
  ops eligible to auto-commit, and only at phase 3 when the Governor is
  clean. Every commit/hold/approval-rejected decision lands in the
  append-only ledger -- 37 tests / 116 assertions green
- (`clojure -M:dev:test`), demo runnable end-to-end against both Store
- backends (`clojure -M:dev:run`)."}
+ (`kbb -M:dev:test`), demo runnable end-to-end against both Store
+ backends (`kbb -M:dev:run`)."}
