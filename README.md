@@ -22,7 +22,7 @@ approval-rejected decision fact is appended to `caneops.store`'s
 append-only audit ledger (`ledger`/`append-ledger!`), implemented on both
 `MemStore` and a `DatomicStore` (backed by `langchain.db` via
 `kotoba-lang/langchain-store`) that pass the same store-contract test
-(`test/caneops/store_contract_test.cljc`). 37 tests / 116 assertions
+(`test/caneops/store_contract_test.cljk`). 37 tests / 116 assertions
 green (`clojure -M:dev:test`); the demo runner (`clojure -M:dev:run`)
 drives the compiled graph end-to-end through a commit path, an
 escalate→approve→commit path, an escalate→reject→hold path, and a
