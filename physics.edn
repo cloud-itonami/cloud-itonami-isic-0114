@@ -1,0 +1,33 @@
+;; What this vertical's robot physically does, declared for
+;; kotoba.robotics.process (kotoba-lang/robotics). `kbb -M:dev:physics` runs it.
+;;
+;; README "Robotics premise": a field-management robot keeps cane-field
+;; records (acreage, ratoon cycle, yield, brix) and schedules planting,
+;; fertilizing, pre-harvest burn and harvest for a sugar-cane farm (ISIC 0114).
+;; Its physical work: hauling cut cane out of the field over sloping ground and
+;; lifting stalk bundles onto the trailer.
+;;
+;; Every number without a cited source is marked `estimate` in its :basis.
+;; Replacing an estimate with a sourced value is this bot's growth work.
+{:physics/schema "itonami.physical-ai.spec.v1"
+ :repo "cloud-itonami/cloud-itonami-isic-0114"
+ :cases
+ [{:id :cane-haul-out-of-field
+   :kind :transport
+   :procedure "tracked infield carrier hauls a load of cut cane across the field to the headland loading point"
+   :params {:mass-kg 300.0 :payload-kg 800.0 :distance-m 300.0 :v-max-mps 1.5 :a-max-mps2 0.5
+            :brake-decel-mps2 1.0 :drive-force-n 2500.0 :crr 0.10
+            :cog-height-m 0.90 :support-half-length-m 0.70 :max-time-s 3600.0}
+   :sweep {:param :slope-deg :values [0.0 2.0 4.0 6.0 8.0]}
+   :quantity :cycle-time-s
+   :limit {:max 240.0 :basis "estimate: one haul leg inside the harvester's bin-fill cycle"}
+   :boundary {:lo 0.0 :hi 15.0}}
+  {:id :stalk-bundle-onto-trailer
+   :kind :manipulator
+   :procedure "loader arm grips a tied bundle of cane stalks at ground level and lifts it over the trailer side"
+   :params {:l1-m 0.80 :l2-m 0.70 :m1-kg 12.0 :m2-kg 8.0
+            :from [0.90 -0.20] :to [0.40 1.10] :duration-s 3.0 :steps 600}
+   :sweep {:param :payload-kg :values [10.0 20.0 30.0 40.0 50.0]}
+   :quantity :peak-tau1-nm
+   :limit {:max 600.0 :basis "estimate: continuous shoulder torque of a 50 kg-class heavy-payload arm"}
+   :boundary {:lo 1.0 :hi 200.0}}]}
